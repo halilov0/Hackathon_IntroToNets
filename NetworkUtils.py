@@ -1,49 +1,31 @@
 import socket
 
-class NetworkUtils:
-    @staticmethod
-    def create_udp_socket():
-        """Creates a UDP socket."""
-        udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return udp_socket
+MAGIC_COOKIE = 0xabcdcdba
+MSG_TYPE_OFFER   = 0x2  # Server -> Client
+MSG_TYPE_REQUEST = 0x3  # Client -> Server
+MSG_TYPE_PAYLOAD = 0x4  # Server -> Client payload
 
-    @staticmethod
-    def create_tcp_socket():
-        """Creates a TCP socket."""
-        tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return tcp_socket
+BROADCAST_IP = "192.168.8.143"
+BROADCAST_PORT = 13117  # Example broadcast port
+SERVER_LISTEN_UDP_PORT = 20250  # Example for receiving requests
+SERVER_LISTEN_TCP_PORT = 20251  # Example for TCP
 
-    @staticmethod
-    def bind_socket(sock, port):
-        """Binds a socket to a port."""
-        sock.bind(('', port))
+def create_broadcast_socket():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    return s
 
-    @staticmethod
-    def close_socket(sock):
-        """Closes a socket."""
-        try:
-            sock.close()
-        except Exception as e:
-            print(f"Error closing socket: {e}")
+# Helper: create a UDP server socket
+def create_udp_server_socket(port=SERVER_LISTEN_UDP_PORT):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    #s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    s.bind(("", port))  # Listen on all interfaces, given port
+    return s
 
-    @staticmethod
-    def send_udp_message(sock, message, address):
-        """Sends a UDP message to the specified address."""
-        sock.sendto(message, address)
-
-    @staticmethod
-    def receive_udp_message(sock, buffer_size=1024):
-        """Receives a UDP message."""
-        return sock.recvfrom(buffer_size)
-
-    @staticmethod
-    def send_tcp_message(sock, message):
-        """Sends a TCP message."""
-        sock.sendall(message)
-
-    @staticmethod
-    def receive_tcp_message(sock, buffer_size=1024):
-        """Receives a TCP message."""
-        return sock.recv(buffer_size)
+# Helper: create a TCP server socket
+def create_tcp_server_socket(port=SERVER_LISTEN_TCP_PORT):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(("", port))
+    s.listen(5)  # allow up to 5 pending clients
+    return s
