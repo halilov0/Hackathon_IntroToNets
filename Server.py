@@ -53,18 +53,21 @@ class MyServer:
         Wait for request packets on the UDP server socket.
         For each valid request, spawn a thread to handle the 'speed test' (TCP+UDP).
         """
+        
         while self.is_running:
             try:
                 data, addr = self.udp_server_socket.recvfrom(1024)
                 file_size = parse_request_packet(data)
                 if file_size is not None:
-                    print(f"[Server] Received request for {file_size} bytes from {addr}")
+                    print(f"[Server] Received UDP request for {file_size} bytes from {addr}")
                     # Spin up a thread for this new 'transfer' request
                     threading.Thread(target=self._serve_client, args=(addr, file_size), daemon=True).start()
-            except:
+                else:
+                    print(f"[Server] Invalid request from {addr}")
+            except Exception as e:
                 if not self.is_running:
                     break
-
+                
     def _tcp_accept_loop(self):
         """
         Continuously accept TCP connections. Typically, we match them to a request by IP/port.
@@ -116,8 +119,8 @@ class MyServer:
         Send the requested file size in smaller segments to avoid exceeding UDP limits.
         """
         # Total segments and segment size
-        total_segments = (file_size + 1471) // 1472  # Example: divide the file into 10 segments
-        segment_size = 1472  # Ensure max segment size is 1472 bytes
+        total_segments = (file_size + 65000) // 65001  # Example: divide the file into 10 segments
+        segment_size = 65001  # Ensure max segment size is 1472 bytes
 
         #self.udp_server_socket.settimeout(1)  # Set a timeout for the client
 
@@ -133,8 +136,8 @@ class MyServer:
 
             total_sent += payload_size
 
-        print(f"[Server] Finished UDP transfer to {client_addr}")
-        self.udp_server_socket.close()
+        print(f"[Server] Finished UDP transfer to {client_addr} with total {total_sent}")
+        #self.udp_server_socket.close()
 
 
 def main():

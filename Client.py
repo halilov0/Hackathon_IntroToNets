@@ -14,7 +14,7 @@ from NetworkUtils import (
 class MyClient:
     def __init__(self):
         self.is_running = True
-        self.file_size = 1024 * 1024  # default 1MB
+        self.file_size = 1024 * 1024 * 1024  # default 1MB
         self.server_udp_port = None
         self.server_tcp_port = None
         self.server_ip = None
@@ -112,14 +112,16 @@ class MyClient:
         """
         Listen for UDP payload packets and reassemble the file.
         """
-        #udp_sock.settimeout(1.0)
-        total_segments = None
+        udp_sock.settimeout(1)
+        total_segments = 0
         received_segments = 0
         received_data = {}
+        full_payload = 0
+        start_time = time.time()
 
         while True:
             try:
-                packet, addr = udp_sock.recvfrom(65535)  # Receive up to 65,535 bytes
+                packet, addr = udp_sock.recvfrom(min(65535, self.file_size - full_payload))  # Receive up to 65,535 bytes
                 result = parse_payload_packet(packet)
                 #print(f"should be t_segs, c_seg, payload:::: {result}")
 
@@ -130,25 +132,31 @@ class MyClient:
                 total_segments = t_segs
                 received_data[c_seg] = payload 
                 received_segments += 1
-
-                print(f"Received segment {c_seg}/{t_segs} from {addr}")
+                full_payload += len(payload)
 
                 # Break if all segments are received
                 if len(received_data) == total_segments:
                     break
 
-            except socket.timeout:
+            except:
+                end_time = time.time()
+                duration = end_time - start_time
+                speed_bits = (full_payload * 8) / duration if duration > 0 else 0
+                print(f"[Client][UDP] Transfer finished: {full_payload} bytes in {duration:.2f}s, ~{speed_bits:.2f} bits/s")
                 print("Timeout while waiting for packets.")
                 break
-
-        # Reassemble the full file
-        full_data = b"".join(received_data[i] for i in sorted(received_data.keys()))
-        print(f"Reassembled file of size {len(full_data)} bytes.")
-
+    
+    def stop(self):
+        self.is_running = False
+        print("[Client] Shuttting down...")
 
 def main():
     client = MyClient()
-    client.start()
+    try:
+        client.start()
+    except KeyboardInterrupt:
+        print("\nStopping client...")
+        client.stop()
 
 if __name__ == "__main__":
     main()
