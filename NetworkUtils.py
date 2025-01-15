@@ -5,8 +5,8 @@ MSG_TYPE_OFFER   = 0x2  # Server -> Client
 MSG_TYPE_REQUEST = 0x3  # Client -> Server
 MSG_TYPE_PAYLOAD = 0x4  # Server -> Client payload
 
-BROADCAST_IP = "192.168.1.80"
-BROADCAST_PORT = 13117  # Example broadcast port
+BROADCAST_IP = "132.72.69.229"
+BROADCAST_PORT = 58125  # Example broadcast port
 SERVER_LISTEN_UDP_PORT = 20250  # Example for receiving requests
 SERVER_LISTEN_TCP_PORT = 20251  # Example for TCP
 
@@ -14,12 +14,14 @@ def create_broadcast_socket():
     """Creates a socket for broadcasting messages."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     return s
 
 # Helper: create a UDP server socket
 def create_udp_server_socket(port=SERVER_LISTEN_UDP_PORT):
     """Creates a UDP server socket."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(("", port))  # Listen on all interfaces
     return s
 

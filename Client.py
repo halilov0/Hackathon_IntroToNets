@@ -121,7 +121,7 @@ class MyClient:
         received_data = {}
         full_payload = 0
         start_time = time.time()
-
+        end_time = time.time()
         while True:
             try:
                 packet, addr = udp_sock.recvfrom(min(65535, self.file_size - full_payload))  # Receive up to 65,535 bytes
@@ -136,13 +136,13 @@ class MyClient:
                 received_data[c_seg] = payload 
                 received_segments += 1
                 full_payload += len(payload)
+                end_time = time.time()
 
                 # Break if all segments are received
                 if len(received_data) == total_segments:
                     break
 
             except:
-                end_time = time.time()
                 duration = end_time - start_time
                 speed_bits = (full_payload * 8) / duration if duration > 0 else 0
                 number = MyClient.number
