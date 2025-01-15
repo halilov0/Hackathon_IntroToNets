@@ -22,7 +22,7 @@ class MyServer:
         self.is_running = True
 
     def start(self):
-        print("Server started. Broadcasting offers and listening for requests...")
+        print("Server started, listening on IP address" + BROADCAST_IP)
         # Start broadcast thread
         threading.Thread(target=self._broadcast_offers, daemon=True).start()
         # Start thread to handle UDP requests
@@ -45,7 +45,7 @@ class MyServer:
         """
         while self.is_running:
             offer_packet = build_offer_packet(SERVER_LISTEN_UDP_PORT, SERVER_LISTEN_TCP_PORT)
-            self.broadcast_socket.sendto(offer_packet, (BROADCAST_IP, BROADCAST_PORT))
+            self.broadcast_socket.sendto(offer_packet, ("<broadcast>", BROADCAST_PORT))
             time.sleep(1)
 
     def _handle_udp_requests(self):

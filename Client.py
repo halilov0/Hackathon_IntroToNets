@@ -12,15 +12,16 @@ from NetworkUtils import (
 )
 
 class MyClient:
+    number = 1
     def __init__(self):
         self.is_running = True
-        self.file_size = 1024 * 1024 * 1024  # default 1MB
+        self.file_size = 1024 * 1024  # default 1MB
         self.server_udp_port = None
         self.server_tcp_port = None
         self.server_ip = None
 
     def start(self):
-        print("[Client] Starting, listening for offers...")
+        print("Client started, listening for offer requests...")
         # Thread to listen for offers
         threading.Thread(target=self._listen_for_offers, daemon=True).start()
         
@@ -54,7 +55,7 @@ class MyClient:
 
     def _perform_speed_test(self):
         """
-        Send a request packet to the server’s UDP port, 
+        Send a request packet to the server's UDP port, 
         then set up a TCP connection, measure speed, etc.
         """
         if not self.server_ip or not self.server_udp_port:
@@ -103,8 +104,10 @@ class MyClient:
             conn.close()
             end_time = time.time()
             duration = end_time - start_time
+            number = MyClient.number
             speed_bits = (received * 8) / duration if duration > 0 else 0
-            print(f"[Client][TCP] Transfer finished: {received} bytes in {duration:.2f}s, ~{speed_bits:.2f} bits/s")
+            print(f"[Client] TCP transfer #{number} finished, total time: {duration:.2f} seconds, total speed: {speed_bits:.2f} bits/second")
+            MyClient.number += 1
         except Exception as e:
             print(f"[Client][TCP] Error: {e}")
 
@@ -142,8 +145,11 @@ class MyClient:
                 end_time = time.time()
                 duration = end_time - start_time
                 speed_bits = (full_payload * 8) / duration if duration > 0 else 0
-                print(f"[Client][UDP] Transfer finished: {full_payload} bytes in {duration:.2f}s, ~{speed_bits:.2f} bits/s")
+                number = MyClient.number
+                percentage = (received_segments / total_segments) * 100 if total_segments > 0 else 0
+                print(f"[Client] UDP transfer #{number} finished, total time: {duration:.2f} seconds, total speed: {speed_bits:.2f} bits/second, percentage of packets received successfully: {percentage:.0f}%")
                 print("Timeout while waiting for packets.")
+                MyClient.number += 1
                 break
     
     def stop(self):
