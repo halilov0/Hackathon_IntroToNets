@@ -22,7 +22,7 @@ class MyServer:
         self.is_running = True
 
     def start(self):
-        print("Server started. Broadcasting offers and listening for requests...")
+        print("Server started, listening on IP address" + BROADCAST_IP)
         # Start broadcast thread
         threading.Thread(target=self._broadcast_offers, daemon=True).start()
         # Start thread to handle UDP requests
